@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كورة لايف - نتائج ومسابقات</title>
+    <style>
+        :root {
+            --primary-dark: #1a1d21;
+            --accent-green: #00e676;
+            --text-light: #ffffff;
+            --card-bg: #2a2e35;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #111;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-green);
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: #222;
+            padding: 10px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        nav a:hover { color: var(--accent-green); }
+
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+
+        /* ستايل جدول المباريات */
+        .match-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-right: 5px solid var(--accent-green);
+        }
+
+        .team-name { width: 35%; font-weight: bold; }
+        .match-info { text-align: center; width: 30%; }
+        .score { font-size: 1.2rem; color: var(--accent-green); font-weight: bold; }
+
+        /* ستايل الكويز */
+        #quiz-section {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .quiz-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .quiz-btn:hover { background: var(--accent-green); color: black; }
+
+        .active { display: block !important; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>KORA LIVE ⚽</h1>
+</header>
+
+<nav>
+    <a onclick="showSection('matches')">المباريات الجارية</a>
+    <a onclick="showSection('quiz')">تحدي الكويز</a>
+</nav>
+
+<div class="container">
+    
+    <section id="matches-section" class="active">
+        <h2>نتائج المباريات الحية</h2>
+        <div id="matches-list">
+            <p>جاري جلب البيانات من السيرفر...</p>
+        </div>
+    </section>
+
+    <section id="quiz-section">
+        <h2>اختبر معلوماتك الكروية</h2>
+        <div id="quiz-container">
+            <p id="question">من هو اللاعب الأكثر تتويجاً بالكرة الذهبية؟</p>
+            <div id="options">
+                </div>
+            <p id="feedback"></p>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    // 1. قسم جلب البيانات من الـ API
+    async function fetchMatches() {
+        const matchesList = document.getElementById('matches-list');
+        
+        // ملاحظة: للحصول على بيانات حقيقية، يجب التسجيل في موقع مثل football-data.org 
+        // أو api-football.com ووضع مفتاح الـ API الخاص بك هنا.
+        // سنستخدم هنا محاكاة (Simulated Data) لتعرف كيف يظهر الشكل النهائي.
+
+       fetch("https://v3.football.api-sports.io/fixtures?live=all", {
+    "method": "GET",
+    "headers": {
+        "x-rapidapi-host": "v3.football.api-sports.io",
+        "x-rapidapi-key": "4eb6e0ffbcbde3b079c5227e9b9676b8ا"
+    }
+})
+
+        matchesList.innerHTML = ''; // تفريغ القائمة
+        
+        demoMatches.forEach(match => {
+            const html = `
+                <div class="match-card">
+                    <div class="team-name">${match.home}</div>
+                    <div class="match-info">
+                        <div class="score">${match.score}</div>
+                        <small>${match.time}</small>
+                    </div>
+                    <div class="team-name" style="text-align: left;">${match.away}</div>
+                </div>
+            `;
+            matchesList.innerHTML += html;
+        });
+    }
+
+    // 2. نظام الكويز (Quiz System)
+    const quizData = [
+        { q: "من فاز بكأس العالم 2022؟", a: ["فرنسا", "الأرجنتين", "البرازيل"], correct: 1 },
+        { q: "أين أقيمت أول نسخة من كأس العالم؟", a: ["إيطاليا", "البرازيل", "الأوروغواي"], correct: 2 },
+        { q: "ما هو لقب نادي ريال مدريد؟", a: ["الريدز", "الميرينغي", "البلوغرانا"], correct: 1 }
+    ];
+
+    let currentQ = 0;
+
+    function loadQuiz() {
+        const qElement = document.getElementById('question');
+        const optElement = document.getElementById('options');
+        const feedback = document.getElementById('feedback');
+        
+        feedback.textContent = "";
+        qElement.textContent = quizData[currentQ].q;
+        optElement.innerHTML = '';
+
+        quizData[currentQ].a.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(index);
+            optElement.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(index) {
+        const feedback = document.getElementById('feedback');
+        if(index === quizData[currentQ].correct) {
+            feedback.innerHTML = "إجابة صحيحة! ✅";
+            currentQ = (currentQ + 1) % quizData.length;
+            setTimeout(loadQuiz, 1500);
+        } else {
+            feedback.innerHTML = "إجابة خاطئة، حاول مرة أخرى ❌";
+        }
+    }
+
+    // 3. التنقل بين الأقسام
+    function showSection(section) {
+        document.getElementById('matches-section').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'none';
+        
+        if(section === 'matches') {
+            document.getElementById('matches-section').style.display = 'block';
+        } else {
+            document.getElementById('quiz-section').style.display = 'block';
+            loadQuiz();
+        }
+    }
+
+    // تشغيل جلب البيانات عند التحميل
+    window.onload = fetchMatches;
+</script>
+
+</body>
+</html>
